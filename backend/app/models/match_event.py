@@ -1,7 +1,7 @@
 import enum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import CheckConstraint, Enum, ForeignKey, SmallInteger
+from sqlalchemy import Boolean, CheckConstraint, Enum, ForeignKey, SmallInteger, false
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
@@ -22,6 +22,9 @@ class MatchEvent(TimestampMixin, Base):
 
     Голевая передача — не отдельное событие, а поле assist_player_id
     у гола. Так одна передача не может попасть в статистику дважды.
+
+    Автогол — это гол с is_own_goal = true: player_id указывает на того,
+    кто забил в свои ворота, а гол засчитывается команде соперника.
     """
 
     __tablename__ = "match_events"
@@ -30,6 +33,11 @@ class MatchEvent(TimestampMixin, Base):
         # Ассистент бывает только у гола.
         CheckConstraint(
             "assist_player_id IS NULL OR type = 'goal'", name="assist_only_for_goal"
+        ),
+        # Автоголом может быть только гол, и передачи у автогола не бывает.
+        CheckConstraint(
+            "NOT is_own_goal OR (type = 'goal' AND assist_player_id IS NULL)",
+            name="own_goal_only_for_goal",
         ),
         # Игрок не может отдать передачу сам себе.
         CheckConstraint(
@@ -59,6 +67,11 @@ class MatchEvent(TimestampMixin, Base):
     # Кто отдал голевую передачу. Пусто, если передачи не было или это карточка.
     assist_player_id: Mapped[int | None] = mapped_column(
         ForeignKey("players.id"), index=True
+    )
+
+    # Гол в свои ворота. Важен для счёта и для сухих матчей вратарей.
+    is_own_goal: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default=false()
     )
 
     match: Mapped["Match"] = relationship(back_populates="events")
