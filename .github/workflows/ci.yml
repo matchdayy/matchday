@@ -9,6 +9,20 @@ on:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: matchday
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -17,9 +31,11 @@ jobs:
       - name: Установить зависимости
         working-directory: backend
         run: pip install -r requirements.txt
-      - name: Проверить, что приложение импортируется
+      - name: Запустить тесты
         working-directory: backend
-        run: python -c "from app.main import app; print('ok')"
+        env:
+          APP_DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/matchday
+        run: pytest
 
   frontend:
     runs-on: ubuntu-latest
