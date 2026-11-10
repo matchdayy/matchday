@@ -9,6 +9,23 @@ on:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    # Чистая база на каждый запуск: на ней проверяем, что миграции накатываются.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: matchday
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      APP_DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/matchday
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -20,6 +37,16 @@ jobs:
       - name: Проверить, что приложение импортируется
         working-directory: backend
         run: python -c "from app.main import app; print('ok')"
+      - name: Накатить миграции на чистую базу
+        working-directory: backend
+        run: alembic upgrade head
+      - name: Проверить, что миграции совпадают с моделями
+        working-directory: backend
+        # Падает, если модель поменяли, а миграцию создать забыли.
+        run: alembic check
+      - name: Проверить, что миграции откатываются
+        working-directory: backend
+        run: alembic downgrade base && alembic upgrade head
 
   frontend:
     runs-on: ubuntu-latest
