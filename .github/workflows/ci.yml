@@ -34,9 +34,6 @@ jobs:
       - name: Установить зависимости
         working-directory: backend
         run: pip install -r requirements.txt
-      - name: Проверить, что приложение импортируется
-        working-directory: backend
-        run: python -c "from app.main import app; print('ok')"
       - name: Накатить миграции на чистую базу
         working-directory: backend
         run: alembic upgrade head
@@ -47,6 +44,9 @@ jobs:
       - name: Проверить, что миграции откатываются
         working-directory: backend
         run: alembic downgrade base && alembic upgrade head
+      - name: Запустить тесты
+        working-directory: backend
+        run: pytest
 
   frontend:
     runs-on: ubuntu-latest
