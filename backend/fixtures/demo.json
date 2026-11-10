@@ -1,0 +1,130 @@
+{
+  "tournament": {
+    "name": "Кубок ITMO",
+    "sport": "football",
+    "start_date": "2026-11-10",
+    "end_date": "2026-12-15"
+  },
+  "teams": [
+    {
+      "name": "ФТМИ",
+      "players": [
+        { "full_name": "Иван Петров", "position": "GK", "number": 1 },
+        { "full_name": "Антон Андреев", "position": "DEF", "number": 4 },
+        { "full_name": "Сергей Волков", "position": "DEF", "number": 5 },
+        { "full_name": "Михаил Бодрин", "position": "DEF", "number": 6 },
+        { "full_name": "Илья Еремин", "position": "DEF", "number": 7 },
+        { "full_name": "Артём Белов", "position": "MID", "number": 8 },
+        { "full_name": "Андрей Пупков", "position": "MID", "number": 11 },
+        { "full_name": "Илья Сатиров", "position": "MID", "number": 2 },
+        { "full_name": "Никита Орлов", "position": "FWD", "number": 9 },
+        { "full_name": "Иван Мэдкидов", "position": "FWD", "number": 10 }
+      ]
+    },
+    {
+      "name": "КТУ",
+      "players": [
+        { "full_name": "Павел Зайцев", "position": "GK", "number": 1 },
+        { "full_name": "Дмитрий Соколов", "position": "DEF", "number": 13 },
+        { "full_name": "Артемий Зуев", "position": "DEF", "number": 24 },
+        { "full_name": "Андрей Петров", "position": "DEF", "number": 52 },
+        { "full_name": "Николай Николаев", "position": "DEF", "number": 67 },
+        { "full_name": "Кирилл Тарасов", "position": "MID", "number": 88 },
+        { "full_name": "Искандер Киселев", "position": "MID", "number": 21 },
+        { "full_name": "Олег Галкин", "position": "MID", "number": 27 },
+        { "full_name": "Григорий Павлов", "position": "FWD", "number": 25 },
+        { "full_name": "Виктор Наумов", "position": "FWD", "number": 16 }
+      ]
+    },
+    {
+      "name": "ТИНТ",
+      "players": [
+        { "full_name": "Роман Жуков", "position": "GK", "number": 1 },
+        { "full_name": "Егор Киреев", "position": "DEF", "number": 3 },
+        { "full_name": "Владислав Мельников", "position": "DEF", "number": 4 },
+        { "full_name": "Тимур Хасанов", "position": "DEF", "number": 5 },
+        { "full_name": "Максим Фролов", "position": "DEF", "number": 15 },
+        { "full_name": "Леонид Крылов", "position": "MID", "number": 8 },
+        { "full_name": "Станислав Данилов", "position": "MID", "number": 10 },
+        { "full_name": "Георгий Смирнов", "position": "MID", "number": 14 },
+        { "full_name": "Александр Беляев", "position": "FWD", "number": 9 },
+        { "full_name": "Денис Комаров", "position": "FWD", "number": 11 }
+      ]
+    },
+    {
+      "name": "НОЖ",
+      "players": [
+        { "full_name": "Владимир Осипов", "position": "GK", "number": 12 },
+        { "full_name": "Руслан Алиев", "position": "DEF", "number": 2 },
+        { "full_name": "Матвей Гусев", "position": "DEF", "number": 3 },
+        { "full_name": "Фёдор Исаев", "position": "DEF", "number": 5 },
+        { "full_name": "Богдан Лазарев", "position": "DEF", "number": 23 },
+        { "full_name": "Даниил Ермаков", "position": "MID", "number": 6 },
+        { "full_name": "Тимофей Нестеров", "position": "MID", "number": 8 },
+        { "full_name": "Эмиль Садыков", "position": "MID", "number": 17 },
+        { "full_name": "Ярослав Власов", "position": "FWD", "number": 7 },
+        { "full_name": "Константин Рыбаков", "position": "FWD", "number": 19 }
+      ]
+    }
+  ],
+  "matches": [
+    {
+      "home": "ФТМИ",
+      "away": "КТУ",
+      "starts_at": "2026-11-10T18:00:00Z",
+      "status": "finished",
+      "events": [
+        { "minute": 12, "type": "goal", "player": "Никита Орлов", "assist": "Артём Белов" },
+        { "minute": 34, "type": "yellow_card", "player": "Сергей Волков" },
+        { "minute": 71, "type": "goal", "player": "Артём Белов", "assist": null }
+      ]
+    },
+    {
+      "home": "ТИНТ",
+      "away": "НОЖ",
+      "starts_at": "2026-11-17T18:00:00Z",
+      "status": "finished",
+      "events": [
+        { "minute": 23, "type": "goal", "player": "Александр Беляев", "assist": "Леонид Крылов" },
+        { "minute": 55, "type": "yellow_card", "player": "Руслан Алиев" },
+        { "minute": 63, "type": "goal", "player": "Ярослав Власов", "assist": "Даниил Ермаков" },
+        { "minute": 88, "type": "goal", "player": "Денис Комаров", "assist": null }
+      ]
+    },
+    {
+      "home": "ФТМИ",
+      "away": "ТИНТ",
+      "starts_at": "2026-11-24T18:00:00Z",
+      "status": "finished",
+      "events": [
+        { "minute": 8, "type": "goal", "player": "Иван Мэдкидов", "assist": "Андрей Пупков" },
+        { "minute": 40, "type": "yellow_card", "player": "Тимур Хасанов" },
+        { "minute": 77, "type": "goal", "player": "Станислав Данилов", "assist": "Георгий Смирнов" }
+      ]
+    },
+    {
+      "home": "КТУ",
+      "away": "НОЖ",
+      "starts_at": "2026-12-01T18:00:00Z",
+      "status": "live",
+      "events": [
+        { "minute": 17, "type": "goal", "player": "Григорий Павлов", "assist": "Кирилл Тарасов" },
+        { "minute": 29, "type": "yellow_card", "player": "Матвей Гусев" }
+      ]
+    },
+    {
+      "home": "ФТМИ",
+      "away": "НОЖ",
+      "starts_at": "2026-12-08T18:00:00Z",
+      "status": "scheduled",
+      "events": []
+    },
+    {
+      "home": "КТУ",
+      "away": "ТИНТ",
+      "starts_at": "2026-12-15T18:00:00Z",
+      "status": "scheduled",
+      "events": []
+    }
+  ]
+}
