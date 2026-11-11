@@ -1,5 +1,6 @@
 import { QueryClient } from '@tanstack/react-query'
-import { ApiError } from './client'
+import { ApiError, onAccessTokenChange } from './client'
+import { resetUserData } from './hooks'
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -13,3 +14,6 @@ export const queryClient = new QueryClient({
     },
   },
 })
+
+// Вошли, вышли или токен протух — данные прошлого пользователя показывать нельзя.
+onAccessTokenChange((token) => resetUserData(queryClient, token))
