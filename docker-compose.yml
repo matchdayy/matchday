@@ -22,7 +22,7 @@ services:
     build: ./backend
     environment:
       APP_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-matchday}
-      APP_SECRET_KEY: ${APP_SECRET_KEY:-dev-secret-change-me}
+      APP_SECRET_KEY: ${APP_SECRET_KEY:-dev-secret-change-me-on-the-real-server}
     ports:
       - "8000:8000"
     volumes:
