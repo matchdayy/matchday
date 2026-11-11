@@ -8,6 +8,7 @@ from app.models.base import Base, TimestampMixin
 
 if TYPE_CHECKING:
     from app.models.match import Match
+    from app.models.round import Round
     from app.models.team import Team
 
 
@@ -34,4 +35,10 @@ class Tournament(TimestampMixin, Base):
     )
     matches: Mapped[list["Match"]] = relationship(
         back_populates="tournament", cascade="all, delete-orphan", passive_deletes=True
+    )
+    rounds: Mapped[list["Round"]] = relationship(
+        back_populates="tournament",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        order_by="Round.number",
     )

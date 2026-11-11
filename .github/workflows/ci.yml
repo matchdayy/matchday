@@ -1,8 +1,9 @@
 name: CI
 
 on:
+  # Любой пулл-реквест, а не только в main: пулл-реквест, открытый
+  # поверх другой ветки (стек), тоже должен проверяться.
   pull_request:
-    branches: [main]
   push:
     branches: [main]
 
@@ -26,6 +27,9 @@ jobs:
           --health-retries 10
     env:
       APP_DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/matchday
+      # Ключ только для тестов, к настоящему серверу отношения не имеет.
+      # Не короче 32 байт: на более короткий ключ pyjwt выдаёт предупреждение.
+      APP_SECRET_KEY: ci-test-secret-not-for-any-real-server
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
