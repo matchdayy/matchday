@@ -1,29 +1,301 @@
+/*
+  Общие стили. Цвета, отступы, скругления и шрифты — только через переменные ниже,
+  своих цветов в экранах не заводим: так приложение выглядит цельным,
+  а тему можно поменять в одном месте.
+  Стили сначала пишутся для телефона (ширина от 375 px), шире — через @media (min-width: …).
+*/
+
 :root {
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  background: #0e1116;
-  color: #f2f0ec;
+  /* Цвета */
+  --color-bg: #f6f7f9;
+  --color-surface: #ffffff;
+  --color-border: #dfe2e7;
+  --color-text: #1a1d21;
+  --color-text-muted: #5f6670;
+  --color-primary: #1f5fd6;
+  --color-primary-text: #ffffff;
+  --color-success: #1e7d45;
+  --color-warning: #a35d00;
+  --color-danger: #c4302b;
+  --color-live: #d42a2a;
+  --color-neutral: #6b7280;
+
+  /* Фоны меток статуса — светлые оттенки основных цветов */
+  --color-success-bg: #e3f4ea;
+  --color-warning-bg: #fdf0dc;
+  --color-danger-bg: #fbe5e4;
+  --color-neutral-bg: #eceef1;
+
+  /* Отступы: шаг 4 px */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  /* Скругления */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+
+  /* Шрифт */
+  --font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-size-sm: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 20px;
+  --font-size-xl: 24px;
+  --line-height: 1.5;
+
+  /* Минимальная высота кнопки: в неё удобно попасть пальцем */
+  --tap-size: 48px;
+
+  --page-max-width: 960px;
+
+  font-family: var(--font-family);
+  font-size: var(--font-size-md);
+  line-height: var(--line-height);
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
+  /* Длинные слова и ссылки переносятся, а не растягивают страницу вширь */
+  overflow-wrap: anywhere;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+h2 {
+  font-size: var(--font-size-lg);
+  margin-bottom: var(--space-3);
+}
+
+a {
+  color: var(--color-primary);
+}
+
+img {
+  max-width: 100%;
+}
+
+/* ---------- Каркас страницы ---------- */
+
+.layout {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
   min-height: 100vh;
 }
 
+.app-header {
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.app-header__logo {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.page {
+  flex: 1;
+  width: 100%;
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+  padding: var(--space-4);
+}
+
+.app-footer {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  border-top: 1px solid var(--color-border);
+}
+
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.page-header__title {
+  font-size: var(--font-size-xl);
+}
+
+.page-header__subtitle {
+  color: var(--color-text-muted);
+}
+
+.section {
+  margin-top: var(--space-5);
+}
+
+/* ---------- Общие блоки ---------- */
+
 .card {
-  padding: 32px 40px;
-  border: 1px solid #262e37;
-  border-radius: 16px;
-  background: #161c23;
-  text-align: center;
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
 }
 
-.ok {
-  color: #52e08d;
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.fail {
-  color: #ff8a65;
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.text-muted {
+  color: var(--color-text-muted);
+}
+
+.text-danger {
+  color: var(--color-danger);
+}
+
+/* ---------- Состояния: загрузка, ошибка, пусто ---------- */
+
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  color: var(--color-text-muted);
+}
+
+.state--error {
+  color: var(--color-danger);
+  background: var(--color-danger-bg);
+  border-radius: var(--radius-md);
+}
+
+.state__title {
+  font-weight: 600;
+}
+
+.placeholder-note {
+  margin-bottom: var(--space-4);
+  padding: var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-warning);
+  background: var(--color-warning-bg);
+  border-radius: var(--radius-md);
+}
+
+/* ---------- Кнопки и поля ---------- */
+
+.button {
+  min-height: var(--tap-size);
+  padding: var(--space-2) var(--space-4);
+  font: inherit;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.button--primary {
+  color: var(--color-primary-text);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.input {
+  min-height: var(--tap-size);
+  padding: var(--space-2) var(--space-3);
+  font: inherit;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+/* ---------- Команда и статус матча ---------- */
+
+.team-name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.team-name__logo {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.badge {
+  display: inline-block;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  border-radius: var(--radius-sm);
+}
+
+.badge--scheduled {
+  color: var(--color-neutral);
+  background: var(--color-neutral-bg);
+}
+
+.badge--live {
+  color: var(--color-primary-text);
+  background: var(--color-live);
+}
+
+.badge--paused {
+  color: var(--color-warning);
+  background: var(--color-warning-bg);
+}
+
+.badge--finished {
+  color: var(--color-success);
+  background: var(--color-success-bg);
+}
+
+.badge--cancelled {
+  color: var(--color-danger);
+  background: var(--color-danger-bg);
+  text-decoration: line-through;
 }

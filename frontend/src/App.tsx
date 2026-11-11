@@ -1,31 +1,28 @@
-import { useEffect, useState } from 'react'
+import { BrowserRouter, Route, Routes } from 'react-router'
+import { Layout } from './components/Layout'
+import { MatchPage } from './pages/MatchPage'
+import { NotFoundPage } from './pages/NotFoundPage'
+import { OperatorMatchPage } from './pages/OperatorMatchPage'
+import { PlayerPage } from './pages/PlayerPage'
+import { TeamPage } from './pages/TeamPage'
+import { TournamentPage } from './pages/TournamentPage'
+import { TournamentsPage } from './pages/TournamentsPage'
 
-type Health = { status: string }
-
+// Все адреса приложения. Новый экран — новая строка здесь и файл в pages/.
 export function App() {
-  const [status, setStatus] = useState<string>('проверяем...')
-  const [ok, setOk] = useState<boolean | null>(null)
-
-  useEffect(() => {
-    fetch('/api/health')
-      .then((r) => r.json() as Promise<Health>)
-      .then((data) => {
-        setStatus(data.status)
-        setOk(data.status === 'ok')
-      })
-      .catch(() => {
-        setStatus('бэкенд недоступен')
-        setOk(false)
-      })
-  }, [])
-
   return (
-    <div className="card">
-      <h1>Матчдей</h1>
-      <p>
-        Бэкенд отвечает:{' '}
-        <span className={ok ? 'ok' : 'fail'}>{status}</span>
-      </p>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route element={<Layout />}>
+          <Route index element={<TournamentsPage />} />
+          <Route path="tournaments/:id" element={<TournamentPage />} />
+          <Route path="matches/:id" element={<MatchPage />} />
+          <Route path="operator/matches/:id" element={<OperatorMatchPage />} />
+          <Route path="teams/:id" element={<TeamPage />} />
+          <Route path="players/:id" element={<PlayerPage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   )
 }
