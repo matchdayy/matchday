@@ -1,12 +1,12 @@
 // Заглушка из каркаса. Экран оператора делается в задаче #42 —
 // этот файл можно переписать целиком. Здесь только проверка, что запись работает:
-// вход по коду, смена статуса, тестовый гол и удаление события.
+// смена статуса, тестовый гол и удаление события.
+// Вход проверяет RequireRole в App.tsx: сюда попадают только оператор и администратор.
 
-import { useEffect, useState, type FormEvent } from 'react'
 import { useParams } from 'react-router'
-import { ApiError, USE_MOCKS, clearOperatorToken, getOperatorToken } from '../api/client'
-import { useAddEvent, useChangeStatus, useDeleteEvent, useMatch, useOperatorCheck } from '../api/hooks'
-import type { Match, MatchStatus } from '../api/types'
+import { newClientId } from '../api/client'
+import { useAddEvent, useChangeStatus, useDeleteEvent, useMatch } from '../api/hooks'
+import type { Match, MatchStatus, NewEvent } from '../api/types'
 import { ErrorState } from '../components/ErrorState'
 import { Loading } from '../components/Loading'
 import { MatchStatusBadge } from '../components/MatchStatusBadge'
@@ -28,46 +28,6 @@ const STATUS_ACTIONS: Record<MatchStatus, { label: string; to: MatchStatus }[]> 
 }
 
 export function OperatorMatchPage() {
-  const [token, setToken] = useState(getOperatorToken)
-
-  const logout = () => {
-    clearOperatorToken()
-    setToken(null)
-  }
-
-  if (!token) return <TokenForm onSuccess={setToken} />
-  return <OperatorPanel onLogout={logout} />
-}
-
-function TokenForm({ onSuccess }: { onSuccess: (token: string) => void }) {
-  const [code, setCode] = useState('')
-  const check = useOperatorCheck()
-
-  const submit = (event: FormEvent) => {
-    event.preventDefault()
-    check.mutate(code, { onSuccess: () => onSuccess(code) })
-  }
-
-  return (
-    <>
-      <PageHeader title="Вход оператора" />
-      <PlaceholderNote />
-      <form className="stack" onSubmit={submit}>
-        <label className="stack">
-          Код оператора
-          <input className="input" value={code} onChange={(e) => setCode(e.target.value)} />
-        </label>
-        {USE_MOCKS && <p className="text-muted">В режиме моков код: dev-operator</p>}
-        {check.isError && <ErrorState error={check.error} title="Код не подошёл" />}
-        <button type="submit" className="button button--primary" disabled={check.isPending || !code}>
-          Войти
-        </button>
-      </form>
-    </>
-  )
-}
-
-function OperatorPanel({ onLogout }: { onLogout: () => void }) {
   const id = Number(useParams().id)
   const match = useMatch(id)
   const addEvent = useAddEvent(id)
@@ -75,10 +35,6 @@ function OperatorPanel({ onLogout }: { onLogout: () => void }) {
   const changeStatus = useChangeStatus(id)
 
   const mutationError = addEvent.error ?? deleteEvent.error ?? changeStatus.error
-  // Код отозвали или он неверный — возвращаем на ввод кода.
-  useEffect(() => {
-    if (mutationError instanceof ApiError && mutationError.status === 401) onLogout()
-  }, [mutationError, onLogout])
 
   if (match.isPending) return <Loading />
   if (match.isError) return <ErrorState error={match.error} onRetry={() => match.refetch()} />
@@ -93,6 +49,12 @@ function OperatorPanel({ onLogout }: { onLogout: () => void }) {
         actions={<MatchStatusBadge status={data.status} />}
       />
       <PlaceholderNote />
+      {data.clock && (
+        <p className="text-muted">
+          Игровое время: {data.clock.minute}′ {data.clock.running ? '(идёт)' : '(остановлено)'}
+          {data.round && ` · ${data.round.title}`}
+        </p>
+      )}
 
       <div className="stack">
         {STATUS_ACTIONS[data.status].map((action) => (
@@ -137,16 +99,12 @@ function OperatorPanel({ onLogout }: { onLogout: () => void }) {
           ))}
         </ul>
       </section>
-
-      <button type="button" className="button" onClick={onLogout}>
-        Выйти
-      </button>
     </>
   )
 }
 
-// Гол первого игрока хозяев на минуту позже последнего события — только для проверки записи.
-function testGoal(match: Match) {
-  const lastMinute = match.events[match.events.length - 1]?.minute ?? 0
-  return { type: 'goal' as const, minute: lastMinute + 1, player_id: match.home_players[0].id }
+// Гол первого игрока хозяев — только для проверки записи. Минуту не передаём:
+// сервер подставит её по игровому времени. client_id защищает от задвоения при повторе.
+function testGoal(match: Match): NewEvent {
+  return { type: 'goal', player_id: match.home_players[0].id, client_id: newClientId() }
 }

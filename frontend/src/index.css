@@ -100,6 +100,11 @@ img {
 }
 
 .app-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
   padding: var(--space-3) var(--space-4);
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
@@ -110,6 +115,12 @@ img {
   font-weight: 700;
   color: var(--color-text);
   text-decoration: none;
+}
+
+.app-header__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
 }
 
 .page {

@@ -11,6 +11,7 @@ import { MatchStatusBadge } from '../components/MatchStatusBadge'
 import { PageHeader } from '../components/PageHeader'
 import { PlaceholderNote } from '../components/PlaceholderNote'
 import { TeamName } from '../components/TeamName'
+import { MatchVotes } from '../components/votes/MatchVotes'
 
 const EVENT_LABELS: Record<EventType, string> = {
   goal: 'Гол',
@@ -74,6 +75,8 @@ export function MatchPage() {
           {data.away_team.name}: {data.away_players.map((p) => p.full_name).join(', ')}
         </p>
       </section>
+
+      {data.status === 'finished' && <MatchVotes matchId={data.id} />}
     </>
   )
 }
