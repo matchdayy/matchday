@@ -1,0 +1,2 @@
+# Кэш TypeScript, появляется после npm run build
+*.tsbuildinfo
