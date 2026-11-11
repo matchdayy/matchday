@@ -1,7 +1,16 @@
 import enum
+import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, CheckConstraint, Enum, ForeignKey, SmallInteger, false
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    Enum,
+    ForeignKey,
+    SmallInteger,
+    Uuid,
+    false,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
@@ -73,6 +82,12 @@ class MatchEvent(TimestampMixin, Base):
     is_own_goal: Mapped[bool] = mapped_column(
         Boolean, default=False, server_default=false()
     )
+    # Ключ идемпотентности: UUID, который придумывает телефон оператора.
+    # Без связи телефон копит события в очереди и отправляет их позже,
+    # иногда по два раза. Повторное событие с тем же client_id не создаётся
+    # заново — так один гол не попадёт в счёт дважды. У событий,
+    # добавленных не с телефона, поле пустое.
+    client_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, unique=True)
 
     match: Mapped["Match"] = relationship(back_populates="events")
     player: Mapped["Player"] = relationship(foreign_keys=[player_id])

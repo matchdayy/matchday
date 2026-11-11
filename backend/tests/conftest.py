@@ -6,6 +6,7 @@ Postgres после alembic upgrade head. Каждый тест сам созд�
 """
 
 import asyncio
+import uuid
 from collections.abc import AsyncIterator, Iterator
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
@@ -20,7 +21,7 @@ from app import models
 from app.config import settings
 from app.database import get_db
 from app.main import app
-from app.models import MatchEventType, MatchStatus
+from app.models import MatchEventType, MatchStatus, UserRole
 from app.services.tournament_status import today_utc
 
 # TestClient запускает каждый запрос в своём цикле событий asyncio.
@@ -144,4 +145,41 @@ async def _delete_tournament(tournament_id: int) -> None:
         await db.execute(
             delete(models.Tournament).where(models.Tournament.id == tournament_id)
         )
+        await db.commit()
+
+
+@pytest.fixture
+def users() -> Iterator[dict[UserRole, models.User]]:
+    """По пользователю на каждую роль. Удаляются после теста.
+
+    Почта у каждого запуска своя, чтобы не столкнуться с чужими записями.
+    Хеш пароля ненастоящий: для проверки ролей и токенов пароль не нужен.
+    """
+    created = asyncio.run(_create_users())
+    yield created
+    asyncio.run(_delete_users([user.id for user in created.values()]))
+
+
+async def _create_users() -> dict[UserRole, models.User]:
+    run_id = uuid.uuid4().hex[:12]
+    created = {
+        role: models.User(
+            email=f"{role.value}-{run_id}@example.com",
+            display_name=f"Тестовый {role.value}",
+            password_hash="не-хеш",
+            role=role,
+            pd_consent_at=datetime.now(tz=UTC),
+        )
+        for role in UserRole
+    }
+    async with session_maker() as db:
+        db.add_all(created.values())
+        await db.commit()
+    return created
+
+
+async def _delete_users(user_ids: list[int]) -> None:
+    # Голоса, фэнтези-команды и лиги пользователя удаляются каскадом в базе.
+    async with session_maker() as db:
+        await db.execute(delete(models.User).where(models.User.id.in_(user_ids)))
         await db.commit()
