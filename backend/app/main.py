@@ -3,8 +3,10 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
+from app.routers import tournaments
 
 app = FastAPI(title="Матчдей API", version="0.1.0")
+app.include_router(tournaments.router)
 
 
 @app.get("/api/health")
