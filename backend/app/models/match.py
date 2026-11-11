@@ -9,6 +9,8 @@ from app.models.base import Base, TimestampMixin
 
 if TYPE_CHECKING:
     from app.models.match_event import MatchEvent
+    from app.models.match_status_change import MatchStatusChange
+    from app.models.round import Round
     from app.models.team import Team
     from app.models.tournament import Tournament
 
@@ -16,8 +18,27 @@ if TYPE_CHECKING:
 class MatchStatus(enum.StrEnum):
     SCHEDULED = "scheduled"  # запланирован
     LIVE = "live"  # идёт прямо сейчас
+    PAUSED = "paused"  # перерыв или остановка: игровое время стоит
     FINISHED = "finished"  # завершён
     CANCELLED = "cancelled"  # отменён
+
+
+def match_status_type() -> Enum:
+    """Тип колонки со статусом матча: у матча и в журнале смены статусов он один.
+
+    native_enum=False: в базе это обычная строка с проверкой на допустимые
+    значения, а не тип ENUM. Новый статус добавляется простой миграцией.
+    Объект создаётся заново для каждой колонки: проверка (CHECK) привязывается
+    к своей таблице.
+    """
+    return Enum(
+        MatchStatus,
+        native_enum=False,
+        create_constraint=True,
+        length=20,
+        name="status",
+        values_callable=lambda e: [item.value for item in e],
+    )
 
 
 class Match(TimestampMixin, Base):
@@ -45,19 +66,16 @@ class Match(TimestampMixin, Base):
     # Дата и время начала с часовым поясом.
     starts_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     venue: Mapped[str | None] = mapped_column(String(200))
-    # native_enum=False: в базе это обычная строка с проверкой на допустимые
-    # значения, а не тип ENUM. Новый статус добавляется простой миграцией.
+    # Статус меняйте через record_status_change из app/services/match_clock.py:
+    # она заодно пишет журнал, по которому считается игровое время.
     status: Mapped[MatchStatus] = mapped_column(
-        Enum(
-            MatchStatus,
-            native_enum=False,
-            create_constraint=True,
-            length=20,
-            name="status",
-            values_callable=lambda e: [item.value for item in e],
-        ),
+        match_status_type(),
         default=MatchStatus.SCHEDULED,
         server_default=MatchStatus.SCHEDULED.value,
+    )
+    # Тур нужен фэнтези-лиге. Удалили тур — матч остаётся, просто без тура.
+    round_id: Mapped[int | None] = mapped_column(
+        ForeignKey("rounds.id", ondelete="SET NULL"), index=True
     )
 
     tournament: Mapped["Tournament"] = relationship(back_populates="matches")
@@ -68,4 +86,12 @@ class Match(TimestampMixin, Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
         order_by="MatchEvent.minute",
+    )
+    round: Mapped["Round | None"] = relationship(back_populates="matches")
+    status_changes: Mapped[list["MatchStatusChange"]] = relationship(
+        back_populates="match",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        # По id — на случай двух смен статуса с одинаковым временем.
+        order_by="[MatchStatusChange.changed_at, MatchStatusChange.id]",
     )

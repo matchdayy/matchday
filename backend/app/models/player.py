@@ -22,6 +22,7 @@ class Player(TimestampMixin, Base):
         # может быть сколько угодно: Postgres не сравнивает пустые значения.
         UniqueConstraint("team_id", "number"),
         CheckConstraint("number BETWEEN 0 AND 99", name="number_range"),
+        CheckConstraint("fantasy_price BETWEEN 1 AND 20", name="fantasy_price_range"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -34,5 +35,10 @@ class Player(TimestampMixin, Base):
     position: Mapped[str | None] = mapped_column(String(30))
     number: Mapped[int | None] = mapped_column(SmallInteger)
     photo_url: Mapped[str | None] = mapped_column(String(500))
+    # Стоимость игрока в фэнтези-лиге. Сумма стоимостей состава ограничена
+    # бюджетом, поэтому всех лучших сразу взять нельзя. Выставляет администратор.
+    fantasy_price: Mapped[int] = mapped_column(
+        SmallInteger, default=5, server_default="5"
+    )
 
     team: Mapped["Team"] = relationship(back_populates="players")
