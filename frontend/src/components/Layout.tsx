@@ -1,6 +1,7 @@
 import { Link, Outlet } from 'react-router'
 import { USE_MOCKS } from '../api/client'
-import { useHealth } from '../api/hooks'
+import { useHealth, useMe } from '../api/hooks'
+import { hasRole } from '../api/roles'
 
 export function Layout() {
   return (
@@ -9,6 +10,7 @@ export function Layout() {
         <Link to="/" className="app-header__logo">
           Матчдей
         </Link>
+        <UserMenu />
       </header>
       <main className="page">
         <Outlet />
@@ -17,6 +19,27 @@ export function Layout() {
         <ApiStatus />
       </footer>
     </div>
+  )
+}
+
+// Справа в шапке: «Войти» для гостя, имя — для вошедшего.
+function UserMenu() {
+  const me = useMe()
+
+  // Пока не знаем, вошёл ли пользователь, ничего не показываем — чтобы «Войти» не мигало.
+  if (me.isPending || me.isError) return null
+  if (!me.data) {
+    return (
+      <nav className="app-header__nav">
+        <Link to="/login">Войти</Link>
+      </nav>
+    )
+  }
+  return (
+    <nav className="app-header__nav">
+      {hasRole(me.data, 'admin') && <Link to="/admin">Администрирование</Link>}
+      <Link to="/me">{me.data.display_name}</Link>
+    </nav>
   )
 }
 
