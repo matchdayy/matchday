@@ -1,6 +1,13 @@
 from app.models import MatchEventType, MatchStatus
 from app.services.score import Score, displayed_score, match_score
-from tests.builders import AWAY_TEAM_ID, HOME_TEAM_ID, card, goal, make_match, make_player
+from tests.builders import (
+    AWAY_TEAM_ID,
+    HOME_TEAM_ID,
+    card,
+    goal,
+    make_match,
+    make_player,
+)
 
 home_player = make_player(player_id=1, team_id=HOME_TEAM_ID)
 away_player = make_player(player_id=2, team_id=AWAY_TEAM_ID)
@@ -56,6 +63,14 @@ def test_cancelled_match_has_no_displayed_score():
     match = make_match(events=[goal(player=home_player)], status=MatchStatus.CANCELLED)
 
     assert displayed_score(match=match) is None
+
+
+def test_paused_match_shows_current_score():
+    # Статус «пауза» добавляется в MatchStatus задачей #28. Строка проверяет,
+    # что счёт у такого матча показывается и до, и после этого изменения.
+    match = make_match(events=[goal(player=home_player)], status="paused")
+
+    assert displayed_score(match=match) == Score(home=1, away=0)
 
 
 def test_live_match_shows_current_score():
