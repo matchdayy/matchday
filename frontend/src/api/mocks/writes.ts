@@ -3,9 +3,9 @@
 // Проверки повторяют ограничения базы на бэкенде, чтобы ошибки всплывали ещё на моках.
 
 import { ApiError } from '../client'
-import type { EventType, Match, MatchEvent, MatchStatus, NewEvent } from '../types'
-import { db, findEvent, findMatch, findPlayer, type MatchRow } from './db'
-import { toMatch, toMatchEvent } from './views'
+import type { EventType, EventUpdate, Match, MatchEvent, MatchStatus, NewEvent } from '../types'
+import { db, findEvent, findMatch, findPlayer, invalid, type EventRow, type MatchRow } from './db'
+import { matchClock, toMatch, toMatchEvent } from './views'
 
 const EVENT_TYPES: EventType[] = ['goal', 'yellow_card', 'red_card']
 
@@ -17,10 +17,6 @@ const ALLOWED_TRANSITIONS: Record<MatchStatus, MatchStatus[]> = {
   cancelled: [],
 }
 
-function invalid(detail: string): never {
-  throw new ApiError(422, detail)
-}
-
 function playerOfMatch(playerId: unknown, match: MatchRow) {
   if (typeof playerId !== 'number') invalid('Не указан игрок')
   const player = findPlayer(playerId)
@@ -30,15 +26,12 @@ function playerOfMatch(playerId: unknown, match: MatchRow) {
   return player
 }
 
-export function addEvent(matchId: number, body: unknown): MatchEvent {
-  const match = findMatch(matchId)
-  if (match.status !== 'live' && match.status !== 'paused') {
-    throw new ApiError(409, 'События можно добавлять, только пока матч идёт или на перерыве')
-  }
+type EventFields = Omit<EventRow, 'id' | 'match_id' | 'client_id'>
 
-  const input = (body ?? {}) as Partial<NewEvent>
+// Общие проверки для нового и исправленного события.
+function validateEvent(match: MatchRow, input: Partial<NewEvent>, minute: unknown): EventFields {
   if (!input.type || !EVENT_TYPES.includes(input.type)) invalid('Неизвестный тип события')
-  if (!Number.isInteger(input.minute) || input.minute! < 0 || input.minute! > 150) {
+  if (typeof minute !== 'number' || !Number.isInteger(minute) || minute < 0 || minute > 150) {
     invalid('Минута должна быть от 0 до 150')
   }
   const player = playerOfMatch(input.player_id, match)
@@ -52,17 +45,49 @@ export function addEvent(matchId: number, body: unknown): MatchEvent {
     if (playerOfMatch(assistId, match).team_id !== player.team_id) invalid('Ассистент должен быть из команды забившего')
   }
 
-  const row = {
+  return { type: input.type, minute, player_id: player.id, assist_player_id: assistId, is_own_goal: isOwnGoal }
+}
+
+export function addEvent(matchId: number, body: unknown): MatchEvent {
+  const match = findMatch(matchId)
+  const input = (body ?? {}) as Partial<NewEvent>
+
+  // Телефон оператора прислал событие повторно после потери связи — отдаём уже созданное.
+  // На бэкенде это ответ 200 вместо 201; fetch-обёртке разница не видна.
+  const clientId = input.client_id ?? null
+  const duplicate = clientId === null ? undefined : db.events.find((e) => e.client_id === clientId)
+  if (duplicate) return toMatchEvent(duplicate)
+
+  if (match.status !== 'live' && match.status !== 'paused') {
+    throw new ApiError(409, 'События можно добавлять, только пока матч идёт или на перерыве')
+  }
+
+  // Минуту не прислали — подставляем по игровому времени.
+  const minute = input.minute ?? matchClock(match)?.minute
+  const row: EventRow = {
     id: db.nextEventId++,
     match_id: match.id,
-    type: input.type,
-    minute: input.minute!,
-    player_id: player.id,
-    assist_player_id: assistId,
-    is_own_goal: isOwnGoal,
+    client_id: clientId,
+    ...validateEvent(match, input, minute),
   }
   db.events.push(row)
   return toMatchEvent(row)
+}
+
+export function updateEvent(eventId: number, body: unknown): MatchEvent {
+  const event = findEvent(eventId)
+  const match = findMatch(event.match_id)
+  const patch = (body ?? {}) as EventUpdate
+  // Поля, которых нет в теле, остаются прежними.
+  const merged: Partial<NewEvent> = {
+    type: event.type,
+    player_id: event.player_id,
+    assist_player_id: event.assist_player_id,
+    is_own_goal: event.is_own_goal,
+    ...patch,
+  }
+  Object.assign(event, validateEvent(match, merged, patch.minute ?? event.minute))
+  return toMatchEvent(event)
 }
 
 export function deleteEvent(eventId: number): void {
@@ -78,5 +103,6 @@ export function changeStatus(matchId: number, body: unknown): Match {
     throw new ApiError(409, `Нельзя перевести матч из статуса «${match.status}» в «${status}»`)
   }
   match.status = status
+  db.statusLog.push({ match_id: match.id, status, at: new Date().toISOString() })
   return toMatch(match)
 }

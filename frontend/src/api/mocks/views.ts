@@ -5,6 +5,7 @@
 import type {
   AssistRow,
   Match,
+  MatchClock,
   MatchEvent,
   MatchShort,
   Player,
@@ -18,7 +19,18 @@ import type {
   TeamShort,
   Tournament,
 } from '../types'
-import { db, findPlayer, findTeam, findTournament, type EventRow, type MatchRow, type PlayerRow, type TeamRow, type TournamentRow } from './db'
+import {
+  db,
+  findPlayer,
+  findRound,
+  findTeam,
+  findTournament,
+  type EventRow,
+  type MatchRow,
+  type PlayerRow,
+  type TeamRow,
+  type TournamentRow,
+} from './db'
 
 export function toTeamShort(team: TeamRow): TeamShort {
   return { id: team.id, name: team.name, logo_url: team.logo_url }
@@ -38,7 +50,7 @@ export function toTournament(tournament: TournamentRow): Tournament {
   return { ...tournament, status }
 }
 
-function eventsOfMatch(matchId: number): EventRow[] {
+export function eventsOfMatch(matchId: number): EventRow[] {
   return db.events.filter((e) => e.match_id === matchId).sort((a, b) => a.minute - b.minute || a.id - b.id)
 }
 
@@ -76,6 +88,30 @@ export function toMatchEvent(event: EventRow): MatchEvent {
     player: toPlayerShort(player),
     assist: event.assist_player_id === null ? null : toPlayerShort(findPlayer(event.assist_player_id)),
     is_own_goal: event.is_own_goal,
+    client_id: event.client_id,
+  }
+}
+
+const MAX_MINUTE = 150
+
+// Игровое время по журналу статусов: складываем отрезки, когда матч был в статусе live.
+// Перерывы (paused) не считаются.
+export function matchClock(match: MatchRow): MatchClock | null {
+  if (match.status === 'scheduled' || match.status === 'cancelled') return null
+  let elapsedMs = 0
+  let liveSince: number | null = null
+  for (const entry of db.statusLog.filter((e) => e.match_id === match.id)) {
+    const at = Date.parse(entry.at)
+    if (liveSince !== null) elapsedMs += at - liveSince
+    liveSince = entry.status === 'live' ? at : null
+  }
+  const running = match.status === 'live' && liveSince !== null
+  if (running) elapsedMs += Date.now() - liveSince!
+  const elapsedSeconds = Math.max(0, Math.floor(elapsedMs / 1000))
+  return {
+    elapsed_seconds: elapsedSeconds,
+    running,
+    minute: Math.min(Math.floor(elapsedSeconds / 60) + 1, MAX_MINUTE),
   }
 }
 
@@ -91,7 +127,7 @@ export function toMatchShort(match: MatchRow): MatchShort {
   }
 }
 
-function playersOfTeam(teamId: number): PlayerRow[] {
+export function playersOfTeam(teamId: number): PlayerRow[] {
   return db.players.filter((p) => p.team_id === teamId)
 }
 
@@ -103,7 +139,14 @@ export function toMatch(match: MatchRow): Match {
     home_players: playersOfTeam(match.home_team_id).map(toPlayerShort),
     away_players: playersOfTeam(match.away_team_id).map(toPlayerShort),
     events: eventsOfMatch(match.id).map(toMatchEvent),
+    clock: matchClock(match),
+    round: match.round_id === null ? null : roundRef(match.round_id),
   }
+}
+
+function roundRef(roundId: number) {
+  const round = findRound(roundId)
+  return { id: round.id, number: round.number, title: round.title }
 }
 
 export function tournamentMatches(tournamentId: number): MatchShort[] {
