@@ -7,3 +7,4 @@
 - Кирилл Саитов — бэкенд? — @kirillsaitow
 - Иванцова Анастасия - ?? - @ivanastyy
 - Гиренков Александр - бэкенд//аналитик - @girenkovaleksandr-ctrl
+- Забастовкина Евгения - дизайнер - @zabastovkinae-alt
